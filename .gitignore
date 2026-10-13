@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local diagnostic logs
+*.log
+startup-error.txt
+backend-error.txt
+
+# Local database schema
+medisecure-schema.sql
