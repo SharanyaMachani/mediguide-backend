@@ -28,30 +28,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:5173",
-                        "http://localhost:5174"
-                )
-        );
-
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(
                 List.of(
                         "GET",
                         "POST",
                         "PUT",
                         "DELETE",
-                        "OPTIONS"
+                        "OPTIONS",
+                        "HEAD",
+                        "PATCH"
                 )
         );
-
-        configuration.setAllowedHeaders(
-                List.of(
-                        "Authorization",
-                        "Content-Type"
-                )
-        );
-
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
         configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
@@ -76,40 +66,26 @@ public class SecurityConfig {
                     SessionCreationPolicy.STATELESS
                 )
             )
-            
-.authorizeHttpRequests(auth -> auth
-    .requestMatchers(
-        "/api/auth/register",
-        "/api/auth/login",
-        "/error"
-    ).permitAll()
-    .requestMatchers(
-        org.springframework.http.HttpMethod.GET,
-        "/api/discharge/patient/**"
-    ).hasRole("PATIENT")
-    .requestMatchers(
-        org.springframework.http.HttpMethod.GET,
-        "/api/discharge/doctor/**"
-    ).hasRole("DOCTOR")
-    .requestMatchers(
-        org.springframework.http.HttpMethod.GET,
-        "/api/discharge"
-    ).hasRole("DOCTOR")
-    .requestMatchers(
-        org.springframework.http.HttpMethod.POST,
-        "/api/discharge"
-    ).hasRole("DOCTOR")
-    .requestMatchers(
-        "/api/discharge/*/simplify",
-        "/api/discharge/*/translate",
-        "/api/discharge/*/validate"
-    ).hasRole("DOCTOR")
-    .requestMatchers(
-        org.springframework.http.HttpMethod.PUT,
-        "/api/discharge/*/approve"
-    ).hasRole("DOCTOR")
-    .anyRequest().authenticated()
-)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(
+                    "/api/auth/**",
+                    "/error"
+                ).permitAll()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.GET,
+                    "/api/discharge/patient/**"
+                ).hasRole("PATIENT")
+                .requestMatchers(
+                    "/api/discharge/**",
+                    "/api/patients/**",
+                    "/api/doctors/**",
+                    "/api/visits/**",
+                    "/api/diagnoses/**",
+                    "/api/prescriptions/**"
+                ).hasRole("DOCTOR")
+                .anyRequest().authenticated()
+            )
             .addFilterBefore(
                 jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class
@@ -117,5 +93,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }
 

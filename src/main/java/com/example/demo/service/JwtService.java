@@ -5,6 +5,7 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
@@ -13,14 +14,14 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    private final String SECRET_KEY =
-            "MediSecureSecretKeyForJWTAuthentication2026VerySecure";
+    @Value("${jwt.secret:MediSecureSecretKeyForJWTAuthentication2026VerySecure}")
+    private String secretKey;
 
     private final long EXPIRATION_TIME = 1000 * 60 * 60;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(
-                SECRET_KEY.getBytes(StandardCharsets.UTF_8)
+                secretKey.getBytes(StandardCharsets.UTF_8)
         );
     }
 

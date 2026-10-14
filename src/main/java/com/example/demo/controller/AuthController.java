@@ -2,10 +2,12 @@ package com.example.demo.controller;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.AuthRequest;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
@@ -14,7 +16,7 @@ import com.example.demo.service.JwtService;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -30,11 +32,16 @@ public class AuthController {
 
     @PostMapping("/register")
     public AuthResponse register(
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam Role role) {
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String password,
+            @RequestParam(required = false) Role role,
+            @RequestBody(required = false) AuthRequest body) {
 
-        User user = authService.register(email, password, role);
+        String targetEmail = (email != null && !email.isBlank()) ? email : (body != null ? body.getEmail() : null);
+        String targetPassword = (password != null && !password.isBlank()) ? password : (body != null ? body.getPassword() : null);
+        Role targetRole = (role != null) ? role : (body != null ? body.getRole() : null);
+
+        User user = authService.register(targetEmail, targetPassword, targetRole);
 
         String token = jwtService.generateToken(
                 user.getEmail(),
@@ -51,11 +58,16 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam Role role) {
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String password,
+            @RequestParam(required = false) Role role,
+            @RequestBody(required = false) AuthRequest body) {
 
-        User user = authService.login(email, password, role);
+        String targetEmail = (email != null && !email.isBlank()) ? email : (body != null ? body.getEmail() : null);
+        String targetPassword = (password != null && !password.isBlank()) ? password : (body != null ? body.getPassword() : null);
+        Role targetRole = (role != null) ? role : (body != null ? body.getRole() : null);
+
+        User user = authService.login(targetEmail, targetPassword, targetRole);
 
         String token = jwtService.generateToken(
                 user.getEmail(),
@@ -69,4 +81,4 @@ public class AuthController {
                 token
         );
     }
-}
+}

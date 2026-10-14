@@ -15,7 +15,7 @@ import com.example.demo.repository.VisitRepository;
 
 @RestController
 @RequestMapping("/api/visits")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class VisitController {
 
     private final VisitRepository visitRepository;

@@ -17,11 +17,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class TeluguTranslationService {
 
-    @Value("${groq.api-key}")
+    @Value("${groq.api-key:}")
     private String apiKey;
 
-    @Value("${groq.api-url}")
+    @Value("${groq.api-url:https://api.groq.com/openai/v1/chat/completions}")
     private String apiUrl;
+
+    @Value("${groq.model:openai/gpt-oss-120b}")
+    private String model;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RestTemplate restTemplate = new RestTemplate();
@@ -32,6 +35,11 @@ public class TeluguTranslationService {
                 || englishInstructions.isBlank()) {
             throw new IllegalArgumentException(
                     "English instructions cannot be empty.");
+        }
+
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "Groq API key is not configured. Please set the GROQ_API_KEY environment variable.");
         }
 
         String prompt = """
@@ -54,7 +62,7 @@ public class TeluguTranslationService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             Map<String, Object> requestBody = Map.of(
-                    "model", "openai/gpt-oss-120b",
+                    "model", model,
                     "messages", List.of(
                             Map.of(
                                     "role", "user",
@@ -63,6 +71,7 @@ public class TeluguTranslationService {
                     ),
                     "temperature", 0
             );
+
 
             HttpEntity<Map<String, Object>> request =
                     new HttpEntity<>(requestBody, headers);

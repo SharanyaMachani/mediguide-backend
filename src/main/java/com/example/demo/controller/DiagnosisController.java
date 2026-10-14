@@ -15,7 +15,7 @@ import com.example.demo.repository.DiagnosisRepository;
 
 @RestController
 @RequestMapping("/api/diagnoses")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class DiagnosisController {
 
     private final DiagnosisRepository diagnosisRepository;

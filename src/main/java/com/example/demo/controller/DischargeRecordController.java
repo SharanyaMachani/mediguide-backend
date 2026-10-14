@@ -13,28 +13,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.entity.DischargeRecord;
+import com.example.demo.entity.User;
 import com.example.demo.repository.DischargeRecordRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.AiSimplificationService;
 import com.example.demo.service.DischargeValidationService;
 import com.example.demo.service.TeluguTranslationService;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/discharge")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class DischargeRecordController {
 
     private final DischargeRecordRepository dischargeRecordRepository;
+    private final UserRepository userRepository;
     private final AiSimplificationService aiSimplificationService;
     private final TeluguTranslationService teluguTranslationService;
     private final DischargeValidationService validationService;
 
     public DischargeRecordController(
             DischargeRecordRepository dischargeRecordRepository,
+            UserRepository userRepository,
             AiSimplificationService aiSimplificationService,
             TeluguTranslationService teluguTranslationService,
             DischargeValidationService validationService) {
 
         this.dischargeRecordRepository = dischargeRecordRepository;
+        this.userRepository = userRepository;
         this.aiSimplificationService = aiSimplificationService;
         this.teluguTranslationService = teluguTranslationService;
         this.validationService = validationService;
@@ -54,10 +60,20 @@ public class DischargeRecordController {
     }
 
     @GetMapping("/patient/{patientId}")
-    public List<DischargeRecord> getPatientDischarges(
-            @PathVariable Long patientId) {
+    public ResponseEntity<?> getPatientDischarges(
+            @PathVariable Long patientId,
+            Authentication authentication) {
 
-        return dischargeRecordRepository.findByPatientId(patientId);
+        if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"))) {
+            String email = authentication.getName();
+            User currentUser = userRepository.findByEmailIgnoreCase(email).orElse(null);
+            if (currentUser != null && !currentUser.getId().equals(patientId)) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                        .body(java.util.Map.of("message", "Access denied: You can only view your own records."));
+            }
+        }
+
+        return ResponseEntity.ok(dischargeRecordRepository.findByPatientId(patientId));
     }
 
     @GetMapping("/doctor/{doctorId}")
@@ -66,6 +82,7 @@ public class DischargeRecordController {
 
         return dischargeRecordRepository.findByDoctorId(doctorId);
     }
+
 
     // AI SIMPLIFICATION
     @PostMapping("/{id}/simplify")

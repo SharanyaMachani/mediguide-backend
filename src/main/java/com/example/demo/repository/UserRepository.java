@@ -8,6 +8,7 @@ import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-Optional<User> findByEmail(String email);
-List<User> findByRole(Role role);
+    Optional<User> findByEmail(String email);
+    Optional<User> findByEmailIgnoreCase(String email);
+    List<User> findByRole(Role role);
 }

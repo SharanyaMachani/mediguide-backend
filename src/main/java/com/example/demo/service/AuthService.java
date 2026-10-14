@@ -21,32 +21,39 @@ public class AuthService {
 
     public User register(String email, String password, Role role) {
 
-        if (role != Role.PATIENT) {
-            throw new RuntimeException(
-                    "Public registration is allowed for patients only"
-            );
+        if (role == null || (role != Role.PATIENT && role != Role.DOCTOR)) {
+            throw new RuntimeException("Role must be either PATIENT or DOCTOR");
         }
 
-        if (email == null || email.isBlank()
-                || password == null || password.length() < 8) {
-            throw new RuntimeException(
-                    "Enter a valid email and a password of at least 8 characters"
-            );
+        if (email == null || email.isBlank() || !email.contains("@") || !email.contains(".")) {
+            throw new RuntimeException("Please enter a valid email address");
         }
 
-        if (userRepository.findByEmail(email).isPresent()) {
+        if (password == null || password.length() < 8) {
+            throw new RuntimeException("Password must be at least 8 characters long");
+        }
+
+        String cleanEmail = email.trim().toLowerCase();
+
+        if (userRepository.findByEmailIgnoreCase(cleanEmail).isPresent()) {
             throw new RuntimeException("Email already registered");
         }
 
         String hashedPassword = passwordEncoder.encode(password);
-        User user = new User(email, hashedPassword, Role.PATIENT);
+        User user = new User(cleanEmail, hashedPassword, role);
 
         return userRepository.save(user);
     }
 
     public User login(String email, String password, Role role) {
 
-        User user = userRepository.findByEmail(email)
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        String cleanEmail = email.trim().toLowerCase();
+
+        User user = userRepository.findByEmailIgnoreCase(cleanEmail)
                 .orElseThrow(() ->
                         new RuntimeException("Invalid email or password"));
 
